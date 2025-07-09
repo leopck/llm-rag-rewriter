@@ -47,11 +47,11 @@ print("\n Enter your query below. Type 'exit' to quit. Type 'vllm' to export fin
 retained_context = []
 
 while True:
-    query = input("🔎 Your query: ").strip()
+    query = input("Your query: ").strip()
     if query.lower() == "exit":
         break
     elif query.lower() == "vllm":
-        print("\n📤 Final context for vLLM prompt:\n")
+        print("\n Final context for vLLM prompt:\n")
         print("\n--- CONTEXT START ---\n")
         print("\n".join(retained_context))
         print("\n--- CONTEXT END ---\n")
@@ -63,7 +63,7 @@ while True:
     results = [chunks[i] for i in I[0]]
     retained_context.extend(results)
 
-    print("\n📚 Retrieved Chunks:")
+    print("\n Retrieved Chunks:")
     for i, chunk in enumerate(results):
         print(f"--- Chunk #{i+1} ---")
         print(chunk[:1000], "\n")
