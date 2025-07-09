@@ -6,42 +6,43 @@ from llama_index.core import SimpleDirectoryReader
 from llama_index.core.node_parser import SentenceSplitter
 from tqdm import tqdm
 
-# Step 1: Load embedding model (placeholder for Qwen3)
-model = SentenceTransformer("BAAI/bge-base-en-v1.5")  # Replace with actual model path if local
-#model = SentenceTransformer("Qwen/Qwen3-Embedding-8B")  # Replace with actual model path if local
+# Step 1: Load embedding model
+# NOTE: BAAI/bge-base-en-v1.5 is around 68% mean while Qwen3 is 70% mean, but 8B models takes forever to run on CPU, BAAI only takes 10mins for this docs
+model = SentenceTransformer("BAAI/bge-base-en-v1.5")
+#model = SentenceTransformer("Qwen/Qwen3-Embedding-8B")
 
-# Step 2: Load textbook documents from EPUB/Markdown/Text
+# Step 2: Load textbook documents from markdown inside textbook
 docs = SimpleDirectoryReader(input_dir="/app/textbook").load_data()
-print("✅ Loaded document count:", len(docs))
+print("Loaded document count:", len(docs))
 
 # Step 3: Chunk the text (approx. 512 tokens per chunk)
-print("✂️ Chunking documents into manageable pieces...")
+print("Chunking documents into manageable pieces...")
 splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
 nodes = splitter.get_nodes_from_documents(docs)
 chunks = [n.text for n in nodes]
-print(f"📚 Total chunks generated: {len(chunks)}")
+print(f"Total chunks generated: {len(chunks)}")
 
 # Step 4: Batch embed chunks to avoid memory overload
 def batch_encode(texts, model, batch_size=8):
     all_embeddings = []
-    for i in tqdm(range(0, len(texts), batch_size), desc="🔄 Embedding chunks"):
+    for i in tqdm(range(0, len(texts), batch_size), desc="Embedding chunks"):
         batch = texts[i:i+batch_size]
         embeddings = model.encode(batch, normalize_embeddings=True)
         all_embeddings.extend(embeddings)
     return np.array(all_embeddings)
 
-print("🚀 Starting embedding...")
+print("Starting embedding...")
 embeddings = batch_encode(chunks, model)
 dimension = embeddings.shape[1]
 
 # Step 5: Build FAISS index
-print("🗂️ Building FAISS index...")
+print("Building FAISS index...")
 index = faiss.IndexFlatIP(dimension)
 index.add(np.array(embeddings))
-print("✅ FAISS index built with", index.ntotal, "vectors.")
+print("FAISS index built with", index.ntotal, "vectors.")
 
 # Step 6: Interactive query loop
-print("\n💬 Enter your query below. Type 'exit' to quit. Type 'vllm' to export final context for your LLM prompt.\n")
+print("\n Enter your query below. Type 'exit' to quit. Type 'vllm' to export final context for your LLM prompt.\n")
 
 retained_context = []
 
